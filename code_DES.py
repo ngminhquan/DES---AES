@@ -226,16 +226,6 @@ def swap(left, right):
     return left, right
 
 
-#Mix one round
-
-def function(right, rkb):
-    right_expand = permute(right, EP, 48)
-    T1 = xor(right_expand, rkb)
-    T2 = substitute(T1)
-    T3 = permute(T2, P_box, 32)
-    return T3
-
-
 def substitute(T1):
     T2 = ""
     for i in range(1,9):
@@ -263,12 +253,16 @@ def encrypt(pt, key):
     left = pt[0:32]
     right = pt[32:64]
     for i in range (0, 16): 
-        T3 = function(right, rkb[i])
+        right_expand = permute(right, EP, 48)
+        T1 = xor(right_expand, rkb)
+        T2 = substitute(T1)
+        T3 = permute(T2, P_box, 32)
         right = xor(left, T3)
         if i != 15:
             swap(left, right)
     pre_output = left + right
-    ciphertext = bin_to_hex(permute(pre_output, InvIP, 64))   
+    ciphertext = bin_to_hex(permute(pre_output, InvIP, 64))
+   
     return ciphertext
 
 print(encrypt(pt, key))
