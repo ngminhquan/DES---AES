@@ -1,8 +1,4 @@
 ﻿#input
-from decimal import DecimalException
-from re import T
-
-
 pt = "02468ACEECA86420"
 key = "0F1571C947D9E859"
 
@@ -221,7 +217,35 @@ def left_shift(s, shift, n):
 
 
 
-def key_generation(C):
+#Encrypt
+#swap left and right
+def swap(left, right):
+    a = left
+    left = right
+    right = a
+    return left, right
+
+
+#Mix one round
+
+def function(right, rkb):
+    right_expand = permute(right, EP, 48)
+    T1 = xor(right_expand, rkb)
+    T2 = substitute(T1)
+    T3 = permute(T2, P_box, 32)
+    return T3
+
+
+def substitute(T1):
+    T2 = ""
+    for i in range(1,9):
+        row = bin_to_dec(int(T1[i * 6] + T1[i * 6 + 5]))
+        col = bin_to_dec(int(T1[i * 6 + 1] + T1[i * 6 + 2] + T1[i * 6 + 3] + T1[i * 6 + 4]))
+        value = S_box[i][row][col]
+        T2 += dec_to_bin(value)
+    return T2
+
+def encrypt(pt, key):
     key = permute(key, PC1, 56)         #ignore every eighth bit and permute
     C = key[0:28]                       #56bits key => two 28bits
     D = key[28:56]
@@ -234,40 +258,18 @@ def key_generation(C):
         round_key = permute(combine, PC2, 48)
         rkb.append(round_key)
         rk.append(bin_to_hex(round_key))
-
-#Encrypt
-#swap left and right
-def swap(left, right):
-    a = left
-    left = right
-    right = a
-    return left, right
-
-
-#Mix one round
-def mixxer(left, right, rkb):
-    T1 = right
-    function()
-
-def function(right, rkb):
-    right_expand = permute(right, EP, 48)
-    T1 = xor(right_expand, rkb)
-
-
-def substitute():
-    for i in range(1,9):
-
-
-def encrypt(pt, rkb, rk):
     pt = hex_to_bin(pt)
     pt = permute(pt, IP, 64)
     left = pt[0:32]
     right = pt[32:64]
-    for i in range (1, 16):
-        mixxer(left, right, rkb)
-        if i != 16:
+    for i in range (0, 16): 
+        T3 = function(right, rkb[i])
+        right = xor(left, T3)
+        if i != 15:
             swap(left, right)
     pre_output = left + right
-    ciphertext = permute(pre_output, InvIP, 64)
+    ciphertext = bin_to_hex(permute(pre_output, InvIP, 64))   
     return ciphertext
+
+print(encrypt(pt, key))
 
