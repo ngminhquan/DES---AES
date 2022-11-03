@@ -1,7 +1,8 @@
 ﻿#input
-pt = "02468ACEECA86420"
-key = "0F1571C947D9E859"
-
+pt = '123456ABCD132536'
+key = 'AABB09182736CCDD'
+pt = pt.upper()
+key = key.upper()
 #transform hexadecimal to binary
 def hex_to_bin(s):
     trans = {
@@ -96,12 +97,6 @@ EP = [32, 1, 2, 3, 4, 5,
       24, 25, 26, 27, 28, 29,
       28, 29, 30, 31, 32, 1]
 
-#Expansion 32 bits to 48 bits
-def ep32_48(k, arr, n):
-    ep = ""
-    for i in range (0, n):
-        ep = ep +k[arr[i]-1]
-    return ep
 
 #XOR pt_48bits with key_48bits
 def xor(a, b):
@@ -114,13 +109,15 @@ def xor(a, b):
 
 #Transform decimal to binary
 def dec_to_bin(s):
-        bin = ""
-        while (s != 0):
-            r = s % 2
-            bin += str(r)
-            s //= 2
-        return bin
-#print(dec_to_bin(3))
+    res = bin(s).replace("0b", "") # loai bo 0b cua ham bin
+    if(len(res) % 4 != 0):
+        div = len(res) / 4
+        div = int(div)
+        counter = (4 * (div + 1)) - len(res)
+        for i in range(0, counter):
+            res = '0' + res
+    return res
+
 
 #Transform binary to decimal
 def bin_to_dec(s):
@@ -205,8 +202,7 @@ LSTable = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
 #Left Shift n bit
 def left_shift(s, shift, n):
-    A = ""
-    
+    A = "" 
     for j in range (shift,n):
         A += s[j]
     for i in range(shift):
@@ -214,7 +210,6 @@ def left_shift(s, shift, n):
         A += k
     return A
 #print(left_shift("12345", 2, 5))
-
 
 
 #Encrypt
@@ -228,33 +223,38 @@ def swap(left, right):
 
 def substitute(T1):
     T2 = ""
-    for i in range(1,9):
-        row = bin_to_dec(int(T1[i * 6] + T1[i * 6 + 5]))
+    for i in range(0,8):
+        row = bin_to_dec(int(T1[i * 6] + T1[i * 6 + 5]))        #vi tri hang trong S_box
         col = bin_to_dec(int(T1[i * 6 + 1] + T1[i * 6 + 2] + T1[i * 6 + 3] + T1[i * 6 + 4]))
-        value = S_box[i][row][col]
+        value = S_box[i][row][col]                                 #vi tri cot trong S_box
         T2 += dec_to_bin(value)
     return T2
 
+
 def encrypt(pt, key):
+    #key generation
+    key = hex_to_bin(key)
     key = permute(key, PC1, 56)         #ignore every eighth bit and permute
     C = key[0:28]                       #56bits key => two 28bits
     D = key[28:56]
     rkb = []
     rk = []
-    for i in range(0, 16):
+    for i in range(0, 16):                  #thuc hien voi 16 vong
         C = left_shift(C, LSTable[i], 28)
         D = left_shift(D, LSTable[i], 28)
         combine = C + D
-        round_key = permute(combine, PC2, 48)
+        round_key = permute(combine, PC2, 48)   #round key cho moi vong
         rkb.append(round_key)
         rk.append(bin_to_hex(round_key))
+    
+        
     pt = hex_to_bin(pt)
     pt = permute(pt, IP, 64)
     left = pt[0:32]
     right = pt[32:64]
     for i in range (0, 16): 
-        right_expand = permute(right, EP, 48)
-        T1 = xor(right_expand, rkb)
+        right_expand = permute(right, EP, 48)       #expand rightBlock 32bits to 48bits
+        T1 = xor(right_expand, rkb[i])              #XOR right with roundkey
         T2 = substitute(T1)
         T3 = permute(T2, P_box, 32)
         right = xor(left, T3)
