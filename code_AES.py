@@ -281,33 +281,61 @@ def printMatrix(s):
             a.append(s[k] + s[k + 1])       #moi phan tu cua ma tran gom 2 so hexa
             k += 2
         b.append(a)
+    c = ''
     for i in range(0, 4):
-        print(b[i], end = '\n')
+        for j in range(0, 4):
+            c += b[j][i]
+    d = matrixTrans(c)
+    for i in range(0, 4):
+        print(d[i], end = '\n')
+
+#printMatrix(pt)
 
 #Encrypt
 def encrypt(pt, key):
     w = keyExpansion(key)
     print('Round 0: ')
+    print('     pt input: ')
     printMatrix(pt)
     k0 = w[0] + w[1] + w[2] + w[3]
     print('     round key: ')
+    printMatrix(k0)
+    print('')
     pt = addKey(pt, k0)
+    print('     pt cho round sau:')
     printMatrix(pt)
-    print('\n')
+    print('')
     for i in range(1, 10):
-        print('Round ' + str(i))
         aftersub = subBytes(pt)
         aftershift = shiftRows(aftersub)
         aftermix = mixColumns(aftershift)
         rk = w[i * 4] + w[i * 4 + 1] + w[i * 4 + 2] + w[i * 4 + 3]
         pt = addKey(aftermix, rk)
+        print('Round ' + str(i))
+        print('')
+        print('     Aftersub: ')
         printMatrix(aftersub)
-        print('\t')
-        printMatrix(aftershift)
-        print('\t')
+        print('')
+        print('     Aftershift: ')
+        m = 0
+        b = []
+        for i in range(0, 4):
+            a = []
+            for j in range(0, 4):
+                a.append(aftershift[m] + aftershift[m + 1])       #moi phan tu cua ma tran gom 2 so hexa
+                m += 2
+            b.append(a)
+        for i in range(0, 4):
+            print(b[i], end = '\n')
+        print('     Aftermix: ')
+        printMatrix(aftermix)
+        print('')
         print('     round key: ')
         printMatrix(rk)
-        print('\n')
+        print('')
+        print('     pt cho round sau: ')
+        printMatrix(pt)
+        print('')
     print('Round 10: ')
     last_sub = subBytes(pt)
     last_shift = shiftRows(last_sub)
@@ -328,3 +356,7 @@ def encrypt(pt, key):
     cipher = addKey(d, k10)
     return cipher
 print('final: ' + encrypt(pt, key))
+
+#Decrypt
+def decrypt(cipher, key):
+    w = keyExpansion(key)
