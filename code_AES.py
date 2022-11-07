@@ -307,7 +307,8 @@ def encrypt(pt, key):
         print('\t')
         print('     round key: ')
         printMatrix(rk)
-        print('\n' + '\n')
+        print('\n')
+    print('Round 10: ')
     last_sub = subBytes(pt)
     last_shift = shiftRows(last_sub)
     #mixColumns(pt)
@@ -317,6 +318,13 @@ def encrypt(pt, key):
         for j in range(0, 4):
             d += c[j][i]
     k10 = w[40] + w[41] + w[42] + w[43]
+    printMatrix(last_sub)
+    print('')
+    printMatrix(last_shift)
+    print('')
+    print('     round key: ')
+    printMatrix(k10)
+    print('\n')
     cipher = addKey(d, k10)
     return cipher
-print('\n' + 'final: ' + encrypt(pt, key))
+print('final: ' + encrypt(pt, key))
