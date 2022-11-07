@@ -175,23 +175,36 @@ def xor(a, b):                              #xor 2 so nhi phan a, b
 
 def multiplication(x, a):                   #phep nhan trong GF(2^8)
     x = hex_to_bin(x)
-    value = ''
-    if int(a) == 1:                         #nhan x voi '01'
-        return bin_to_hex(x)                
-    elif int(a) == 2:                       #nhan x voi '02'
-        if int(x[0]) == 0:
-            for i in range(1, len(x)):
-                value += x[i]
-            value += '0'
+    a = hex_to_bin(a)
+    y = x
+    k = []
+    for i in range(0, 8):
+        if i == 0:
+            k.append(y)
         else:
-            value = xor(x[1:] + '0', '00011011')
-        return bin_to_hex(value)
-    else:                                   #nhan x voi so lon hon 2
-        b = multiplication(bin_to_hex(x), int(a)-1)     
-        b = hex_to_bin(b) 
-        value = xor(x, b)
-        value = bin_to_hex(value)
-        return value
+            if int(y[0]) == 0:
+                for j in range(1, len(y)):
+                    value += y[j]
+                value += '0'
+                y = value
+                k.append(y)
+            else:
+                value = xor(y[1:] + '0', '00011011')
+                y = value
+                k.append(y)
+        value = ''
+    k.reverse()
+    b = []
+    for i in range(0, 8):
+        if int(a[i]) == 1:
+            b.append(k[i])
+    val = b[0]
+    for i in range(1, len(b)):
+        if len(b) == 1:
+            break
+        else:
+            val = xor(val, b[i])
+    return bin_to_hex(val)
 
 
 def mixColumns(s):                          #thuc hien mixColumns
@@ -258,7 +271,7 @@ def keyExpansion(key):                      #mo rong key tu 16bytes thanh 176byt
     value = '01'
     for i in range(0, 10):
         Rcon.append(value)
-        value = multiplication(value, 2)
+        value = multiplication(value, '02')
 
     for i in range(4, 44):      #thuc hien mo rong key thanh 44 words
         temp = w[i-1]
@@ -271,6 +284,8 @@ def keyExpansion(key):                      #mo rong key tu 16bytes thanh 176byt
         w.append(xor(hex_to_bin(temp), hex_to_bin(w[i - 4])))
         w[i] = bin_to_hex(w[i])
     return w
+
+#print(keyExpansion(key))
 
 def printMatrix(s):        
     k = 0
@@ -358,5 +373,20 @@ def encrypt(pt, key):
 print('final: ' + encrypt(pt, key))
 
 #Decrypt
+
+#invmixMatrix
+invmix = [['0E', '0B', '0D', '09'],
+          ['09', '0E', '0B', '0D'],
+          ['0D', '09', '0E', '0B'],
+          ['0B', '0D', '09', '0E']]
+
+#def invmixcol(s):
+
+
 def decrypt(cipher, key):
     w = keyExpansion(key)
+    k0 = w[0] + w[1] + w[2] + w[3]
+    for i in range(1, 10):
+        rk = w[i * 4] + w[i * 4 + 1] + w[i * 4 + 2] + w[i * 4 + 3]
+    k10 = w[40] + w[41] + w[42] + w[43]
+
