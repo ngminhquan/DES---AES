@@ -148,26 +148,24 @@ def matrixTrans(s):                         #chuyen chuoi ve ma tran
         b.append(a)
     return b
 
-def shiftRows(s):
+def shiftRows(s):                           #
     value = ''
     a = matrixTrans(s)
     b = ''
     for i in range(0, 4):
         for j in range(0, 4):
             b += a[j][i]
-    for i in range(0, 4):
+    for i in range(0, 4):                   #cac phan tu o hang i dich vong trai i bits
         value += shift(b[i*8:i*8+8], 2 * i)
     return value
 
-#print(shiftRows('87EC4A8CF26EC3D84D4C46959790E7A6'))
 #MixColumns Transformation
-
-multiMatrix = [['02', '03', '01', '01'],
+multiMatrix = [['02', '03', '01', '01'],    #ma tran nhan trong mixColumns
                ['01', '02', '03', '01'],
                ['01', '01', '02', '03'],
                ['03', '01', '01', '02']]
 
-def xor(a, b):
+def xor(a, b):                              #xor 2 so nhi phan a, b
     c = ''
     for i in range(len(a)):
         if a[i] == b[i]:
@@ -175,12 +173,12 @@ def xor(a, b):
         else: c += '1'
     return c
 
-def multiplication(x, a):
+def multiplication(x, a):                   #phep nhan trong GF(2^8)
     x = hex_to_bin(x)
     value = ''
-    if int(a) == 1:
-        return bin_to_hex(x)
-    elif int(a) == 2:
+    if int(a) == 1:                         #nhan x voi '01'
+        return bin_to_hex(x)                
+    elif int(a) == 2:                       #nhan x voi '02'
         if int(x[0]) == 0:
             for i in range(1, len(x)):
                 value += x[i]
@@ -188,30 +186,26 @@ def multiplication(x, a):
         else:
             value = xor(x[1:] + '0', '00011011')
         return bin_to_hex(value)
-    else:
-        b = multiplication(bin_to_hex(x), int(a)-1)
+    else:                                   #nhan x voi so lon hon 2
+        b = multiplication(bin_to_hex(x), int(a)-1)     
         b = hex_to_bin(b) 
         value = xor(x, b)
         value = bin_to_hex(value)
         return value
 
-#matrix Trans
 
-
-#s = '87F24D976E4C90EC46E74AC3A68CD895'
-
-def mixColumns(s):
+def mixColumns(s):                          #thuc hien mixColumns
     a = []
     b = ''
     s = matrixTrans(s)
-    for i in range(0, 4):
-        for j in range(0, 4):
+    for i in range(0, 4):                   #nhan ma tran dau vao voi multiMatrix
+        for j in range(0, 4):               #phep toan duoc thuc hien trong truong GF(2^8)
             a = []
-            for g in range(0, 4):
-                a.append(multiplication(s[g][j], multiMatrix[i][g]))
+            for g in range(0, 4):           
+                a.append(multiplication(s[g][j], multiMatrix[i][g]))    #phep nhan trong GF(2^8)
             for j in range(0, 4):
                 a[j] = hex_to_bin(a[j])
-            value = xor(xor(a[0], a[1]), xor(a[2], a[3]))
+            value = xor(xor(a[0], a[1]), xor(a[2], a[3]))           #phep cong trong GF(2^8)
             value = bin_to_hex(value)
             b += value
     c = matrixTrans(b)
@@ -221,19 +215,15 @@ def mixColumns(s):
             d += c[j][i]
     return d
 
-#print(mixColumns('AB40F0C48B7FFCE489F1184E35053F2F'))
-
 #AddRoundKey Transformation
-def addKey(s, rk):
+def addKey(s, rk):                          #thuc hien xor input va roundkey(16bytes)
     s = hex_to_bin(s)
     rk = hex_to_bin(rk)
     value = xor(s, rk)
     return bin_to_hex(value)
 
 #Key expansion
-#def g(s):
-
-def rotword(s):
+def rotword(s):                             #dich vong trai 1 byte
     value = ''
     for i in range(1, 4):
         value += (s[2 * i]+s[2 * i+1])
@@ -241,7 +231,7 @@ def rotword(s):
     return value
 
 
-def subword(s):
+def subword(s):                             #thay the tung byte cua input thong qua Sbox
     s = hex_to_bin(s)
     value = ''
     for i in range(0, 4):
@@ -257,20 +247,20 @@ def subword(s):
 #print(subword(rotword('7F8D292F')))
 
 
-def keyExpansion(key):
+def keyExpansion(key):                      #mo rong key tu 16bytes thanh 176bytes
     w = []
     for i in range(0, 4):
         w.append(key[8 * i] + key[8 * i + 1]+
                  key[8 * i + 2] + key[8 * i + 3]+
                  key[8 * i + 4] + key[8 * i + 5]+
                  key[8 * i + 6] + key[8 * i + 7])
-    Rcon = []
+    Rcon = []                   #round constant, thuc hien XOR voi input[i] o vong thu i
     value = '01'
     for i in range(0, 10):
         Rcon.append(value)
         value = multiplication(value, 2)
 
-    for i in range(4, 44):
+    for i in range(4, 44):      #thuc hien mo rong key thanh 44 words
         temp = w[i-1]
         if i % 4 == 0:
             temp = subword(rotword(temp))
@@ -282,47 +272,51 @@ def keyExpansion(key):
         w[i] = bin_to_hex(w[i])
     return w
 
-#print(keyExpansion(key))
+def printMatrix(s):        
+    k = 0
+    b = []
+    for i in range(0, 4):
+        a = []
+        for j in range(0, 4):
+            a.append(s[k] + s[k + 1])       #moi phan tu cua ma tran gom 2 so hexa
+            k += 2
+        b.append(a)
+    for i in range(0, 4):
+        print(b[i], end = '\n')
 
 #Encrypt
 def encrypt(pt, key):
     w = keyExpansion(key)
-    print(pt)
+    print('Round 0: ')
+    printMatrix(pt)
     k0 = w[0] + w[1] + w[2] + w[3]
-    print('rk: ' + k0)
+    print('     round key: ')
     pt = addKey(pt, k0)
-    print(pt)
+    printMatrix(pt)
+    print('\n')
     for i in range(1, 10):
-        pt = subBytes(pt)
-        print(pt)
-        pt = shiftRows(pt)
-        print(pt)
-        pt = mixColumns(pt)
-        print(pt)
+        print('Round ' + str(i))
+        aftersub = subBytes(pt)
+        aftershift = shiftRows(aftersub)
+        aftermix = mixColumns(aftershift)
         rk = w[i * 4] + w[i * 4 + 1] + w[i * 4 + 2] + w[i * 4 + 3]
-        print('rk: '+ rk)
-        pt = addKey(pt, rk)
-        print(pt)
-    pt = subBytes(pt)
-    print(pt)
-    pt = shiftRows(pt)
-    print(pt)
-    #pt = mixColumns(pt)
-    c = matrixTrans(pt)
+        pt = addKey(aftermix, rk)
+        printMatrix(aftersub)
+        print('\t')
+        printMatrix(aftershift)
+        print('\t')
+        print('     round key: ')
+        printMatrix(rk)
+        print('\n' + '\n')
+    last_sub = subBytes(pt)
+    last_shift = shiftRows(last_sub)
+    #mixColumns(pt)
+    c = matrixTrans(last_shift)
     d = ''
     for i in range(0, 4):
         for j in range(0, 4):
             d += c[j][i]
     k10 = w[40] + w[41] + w[42] + w[43]
-    print(k10)
     cipher = addKey(d, k10)
     return cipher
 print('\n' + 'final: ' + encrypt(pt, key))
-
-
-    
-
-
-
-
-
