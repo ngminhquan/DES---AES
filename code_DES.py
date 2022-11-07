@@ -1,6 +1,6 @@
 ﻿#input
-pt = '123456ABCD132536'
-key = 'AABB09182736CCDD'
+pt = '02468aceeca86420'
+key = '0f1571c947d9e859'
 pt = pt.upper()
 key = key.upper()
 #transform hexadecimal to binary
@@ -201,15 +201,16 @@ PC2 = [14, 17, 11, 24, 1, 5, 3, 28,
 LSTable = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
 #Left Shift n bit
-def left_shift(s, shift, n):
-    A = "" 
-    for j in range (shift,n):
-        A += s[j]
-    for i in range(shift):
-        k = s[i]
-        A += k
-    return A
-#print(left_shift("12345", 2, 5))
+def left_shift(k, nth_shifts): #ham dich vong
+    s = ""
+    for i in range(nth_shifts):
+        for j in range(1, len(k)):
+            s = s + k[j]
+        s = s + k[0]
+        k = s
+        s = ""
+    return k
+
 
 
 #Encrypt
@@ -239,9 +240,10 @@ def encrypt(pt, key):
     D = key[28:56]
     rkb = []
     rk = []
-    for i in range(0, 16):                  #thuc hien voi 16 vong
-        C = left_shift(C, LSTable[i], 28)
-        D = left_shift(D, LSTable[i], 28)
+    for i in range(0, 16):                 #thuc hien voi 16 vong
+
+        C = left_shift(C, LSTable[i])
+        D = left_shift(D, LSTable[i])
         combine = C + D
         round_key = permute(combine, PC2, 48)   #round key cho moi vong
         rkb.append(round_key)
@@ -250,16 +252,21 @@ def encrypt(pt, key):
         
     pt = hex_to_bin(pt)
     pt = permute(pt, IP, 64)
+    print("After initial permutation", bin_to_hex(pt))
     left = pt[0:32]
     right = pt[32:64]
+    print("After splitting" ,bin_to_hex(left),"  ",bin_to_hex(right))
     for i in range (0, 16): 
         right_expand = permute(right, EP, 48)       #expand rightBlock 32bits to 48bits
         T1 = xor(right_expand, rkb[i])              #XOR right with roundkey
         T2 = substitute(T1)
         T3 = permute(T2, P_box, 32)
-        right = xor(left, T3)
-        if i != 15:
-            swap(left, right)
+        result = xor(left, T3)
+        left = result
+        if(i != 15):
+            left, right = right, left
+        print("Round ", i + 1, " ", bin_to_hex(left),
+              " ", bin_to_hex(right), " ", rk[i]) #print left , right , roundkey
     pre_output = left + right
     ciphertext = bin_to_hex(permute(pre_output, InvIP, 64))
    
