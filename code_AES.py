@@ -375,7 +375,7 @@ def encrypt(pt, key):
         for j in range(0, 4):
             k10pr += k[j][i]
     printMatrix(k10pr)
-    print('\n')
+    print('')
     cipher = addKey(d, k10)
     return cipher
 
@@ -514,19 +514,19 @@ def decrypt(cp, key):
         cp = invmixcol(afteradd)
         print('Round ' + str(i))
         print('')
-        print('     Aftershift: ')
+        print('     After invshift: ')              #Subbytes trong encrypt
         printMatrix(aftershift)
         print('')        
-        print('     Aftersub: ')
+        print('     After invsub: ')                #pt start round
         printMatrix(aftersub)
         print('')
-        print('     Afteradd: ')
+        print('     After add: ')                   #mixCol trong encrypt
         printMatrix(afteradd)
         print('')
         print('     roundkey: ')
         printMatrix(rk)
         print('')
-        print('     cp cho round sau: ')
+        print('     cp cho round sau: ')            #shiftrows trong encrypt
         printMatrix(cp)
     print('')
     print('Round 10: ')
