@@ -2,10 +2,8 @@
 
 pt = "0123456789abcdeffedcba9876543210"
 key = "0f1571c947d9e8590cb7add6af7f6798"
-pt = pt.upper()
-key = key.upper()
-print("Nhap plaintext la: " + pt)
-print("Nhap key la: " + key + '\n')
+cp = 'ff0b844a0853bf7c6934ab4364148fb9'
+
 
 #Transform hexadecimal to binary
 def hex_to_bin(s):
@@ -124,11 +122,11 @@ def subBytes(s):
 #print(subBytes(pt))
 
 #ShiftRows Transformation
-def shift(s, nth):      #ham dich vong n bits
+def shift(s, nth):      #ham dich vong trai n bits
     if nth == 0:
         return s
     else:
-        for i in range(0, nth):             #dich 1 bits, thuc hien n lan
+        for i in range(0, nth):             #dich trai 1 bits, thuc hien n lan
             k = ''
             for j in range(1, len(s)):      #lay tu bit[1] den het + bit[0]
                 k += s[j]
@@ -306,8 +304,13 @@ def printMatrix(s):
 
 #printMatrix(pt)
 
-#Encrypt
+#Encrypt 
 def encrypt(pt, key):
+    pt = pt.upper()
+    key = key.upper()
+    print("Nhap plaintext la: " + pt)
+    print("Nhap key la: " + key + '\n')
+    print('       ENCRYPTION') 
     w = keyExpansion(key)
     print('Round 0: ')
     print('     pt input: ')
@@ -366,27 +369,182 @@ def encrypt(pt, key):
     printMatrix(last_shift)
     print('')
     print('     round key: ')
-    printMatrix(k10)
+    k = matrixTrans(k10)
+    k10pr = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            k10pr += k[j][i]
+    printMatrix(k10pr)
     print('\n')
     cipher = addKey(d, k10)
     return cipher
-print('final: ' + encrypt(pt, key))
 
-#Decrypt
-
+#Decrypt       
 #invmixMatrix
 invmix = [['0E', '0B', '0D', '09'],
           ['09', '0E', '0B', '0D'],
           ['0D', '09', '0E', '0B'],
           ['0B', '0D', '09', '0E']]
 
-#def invmixcol(s):
+invSbox = [['52', '09', '6A', 'D5', '30', '36', 'A5', '38', 'BF', '40', 'A3', '9E', '81', 'F3', 'D7', 'FB'],
+           ['7C', 'E3', '39', '82', '9B', '2F', 'FF', '87', '34', '8E', '43', '44', 'C4', 'DE', 'E9', 'CB'],
+           ['54', '7B', '94', '32', 'A6', 'C2', '23', '3D', 'EE', '4C', '95', '0B', '42', 'FA', 'C3', '4E'],
+           ['08', '2E', 'A1', '66', '28', 'D9', '24', 'B2', '76', '5B', 'A2', '49', '6D', '8B', 'D1', '25'],
+           ['72', 'F8', 'F6', '64', '86', '68', '98', '16', 'D4', 'A4', '5C', 'CC', '5D', '65', 'B6', '92'],
+           ['6C', '70', '48', '50', 'FD', 'ED', 'B9', 'DA', '5E', '15', '46', '57', 'A7', '8D', '9D', '84'],
+           ['90', 'D8', 'AB', '00', '8C', 'BC', 'D3', '0A', 'F7', 'E4', '58', '05', 'B8', 'B3', '45', '06'],
+           ['D0', '2C', '1E', '8F', 'CA', '3F', '0F', '02', 'C1', 'AF', 'BD', '03', '01', '13', '8A', '6B'],
+           ['3A', '91', '11', '41', '4F', '67', 'DC', 'EA', '97', 'F2', 'CF', 'CE', 'F0', 'B4', 'E6', '73'],
+           ['96', 'AC', '74', '22', 'E7', 'AD', '35', '85', 'E2', 'F9', '37', 'E8', '1C', '75', 'DF', '6E'],
+           ['47', 'F1', '1A', '71', '1D', '29', 'C5', '89', '6F', 'B7', '62', '0E', 'AA', '18', 'BE', '1B'],
+           ['FC', '56', '3E', '4B', 'C6', 'D2', '79', '20', '9A', 'DB', 'C0', 'FE', '78', 'CD', '5A', 'F4'],
+           ['1F', 'DD', 'A8', '33', '88', '07', 'C7', '31', 'B1', '12', '10', '59', '27', '80', 'EC', '5F'],
+           ['60', '51', '7F', 'A9', '19', 'B5', '4A', '0D', '2D', 'E5', '7A', '9F', '93', 'C9', '9C', 'EF'],
+           ['A0', 'E0', '3B', '4D', 'AE', '2A', 'F5', 'B0', 'C8', 'EB', 'BB', '3C', '83', '53', '99', '61'],
+           ['17', '2B', '04', '7E', 'BA', '77', 'D6', '26', 'E1', '69', '14', '63', '55', '21', '0C', '7D']]
 
+#inverse substitute bytes
+def invsub(s):
+    s = hex_to_bin(s)       #Chuyen ve nhi phan
+    value = ''
+    for i in range(0, 16):
+        left4 = ''
+        right4 = ''
+        left4 += s[i * 8] + s[i * 8 + 1] + s[i * 8 +2] + s[i * 8 + 3]       #4 bit trai
+        right4 += s[i * 8 + 4] + s[i * 8+ 5] + s[i * 8 +6] + s[i * 8 + 7]   #4 bit phai
+        row = bin_to_dec(int(left4))        #xac dinh vi tri hang va cot
+        col = bin_to_dec(int(right4))
+        value += invSbox[row][col]             #tim gia tri dua tren invSbox
+    #a = matrixTrans(value)
+    #b = ''
+    #for i in range(0, 4):
+    #    for j in range(0, 4):
+    #        b += a[j][i]
 
-def decrypt(cipher, key):
+    return value
+
+#inverse ShiftRows
+def invshift(s, nth):      #ham dich phai vong n bits
+    if nth == 0:
+        return s
+    else:
+        for i in range(0, nth):             #dich 1 bits, thuc hien n lan
+            k = ''
+            for j in range(0, len(s) - 1):      #lay tu bit[1] den het + bit[0]
+                k += s[j]
+            k = s[len(s)-1] + k
+            s = k
+        return s
+
+def invshiftrows(s):                           #
+    value = ''
+    s = matrixTrans(s)
+    b = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            b += s[j][i]
+    for i in range(0, 4):                   #cac phan tu o hang i dich vong phai i bits
+        value += invshift(b[i*8:i*8+8], 2 * i)
+    c = matrixTrans(value)
+    d = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            d += c[j][i]
+    return d
+
+#inverse mixColumns
+def invmixcol(s):
+    a = []
+    val = ''
+    s = matrixTrans(s)
+    d = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            d += s[j][i]
+    d = matrixTrans(d)
+    for i in range(0, 4):                   #nhan ma tran dau vao voi multiMatrix
+        for j in range(0, 4):               #phep toan duoc thuc hien trong truong GF(2^8)
+            a = []
+            for g in range(0, 4):           
+                a.append(multiplication(d[g][j], invmix[i][g]))    #phep nhan trong GF(2^8)
+            for j in range(0, 4):
+                a[j] = hex_to_bin(a[j])
+            value = xor(xor(a[0], a[1]), xor(a[2], a[3]))           #phep cong trong GF(2^8)
+            value = bin_to_hex(value)
+            val += value
+    c = matrixTrans(val)
+    d = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            d += c[j][i]
+    return d
+
+#main decrypt
+def decrypt(cp, key):
+    cp = cp.upper()
+    key = key.upper()
+    print("Nhap ciphertext la: " + cp)
+    print("Nhap key la: " + key + '\n')
+    print('\n' + '        DECRYPTION')
     w = keyExpansion(key)
     k0 = w[0] + w[1] + w[2] + w[3]
     for i in range(1, 10):
         rk = w[i * 4] + w[i * 4 + 1] + w[i * 4 + 2] + w[i * 4 + 3]
     k10 = w[40] + w[41] + w[42] + w[43]
+    print('Round 0: ')
+    print('     cp input: ')
+    printMatrix(cp)
+    print('     round key: ')
+    c = matrixTrans(k10)
+    d = ''
+    for i in range(0, 4):
+        for j in range(0, 4):
+            d += c[j][i]
+    printMatrix(d)
+    print('')
+    cp = addKey(cp, k10)
+    print('     cp cho round sau:')
+    printMatrix(cp)
+    print('')
+    for i in range(1, 10):
+        aftershift = invshiftrows(cp)
+        aftersub = invsub(aftershift)
+        rk = w[(10 - i) * 4] + w[(10 - i) * 4 + 1] + w[(10 - i) * 4  + 2] + w[(10 - i) * 4 + 3]
+        afteradd = addKey(aftersub, rk)
+        cp = invmixcol(afteradd)
+        print('Round ' + str(i))
+        print('')
+        print('     Aftershift: ')
+        printMatrix(aftershift)
+        print('')        
+        print('     Aftersub: ')
+        printMatrix(aftersub)
+        print('')
+        print('     Afteradd: ')
+        printMatrix(afteradd)
+        print('')
+        print('     roundkey: ')
+        printMatrix(rk)
+        print('')
+        print('     cp cho round sau: ')
+        printMatrix(cp)
+    print('')
+    print('Round 10: ')
+    last_shift = invshiftrows(cp)
+    last_sub = invsub(last_shift)
+    pt = addKey(last_sub, k0)
+    print('     Aftershift: ')
+    printMatrix(last_shift)
+    print('')
+    print('     Aftersub: ')
+    printMatrix(last_sub)
+    print('')
+    print('     round key: ')
+    printMatrix(k0)
+    print('')
+    return pt
 
+
+
+print('final encrypt: ' + encrypt(pt, key))
+print('final decrypt: ' + decrypt(cp, key))
